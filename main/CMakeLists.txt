@@ -1,0 +1,2 @@
+idf_component_register(SRCS "components/ultrasonic/ultrasonic.c" "components/delay/delay.cpp" "components/lcd/lcd.cpp" "components/mpu6050/mpu6050.cpp" "components/i2c/i2c.cpp" "src/system.cpp" "src/display.cpp" "src/bluetooth.cpp" "src/motors.cpp" "src/sensors.cpp" "src/main.cpp"
+                    INCLUDE_DIRS "inc" "components/lcd" "components/delay" "components/ultrasonic" "components/mpu6050" "components/i2c" "components/esp_idf_lib_helpers")
