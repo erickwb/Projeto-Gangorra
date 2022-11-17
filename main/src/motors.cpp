@@ -80,23 +80,38 @@ void vInitMotors(void) {
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL2));
 }
 
-void vAdjustMotors(void) {
-     int target = 0;
-     int out_past = 3194;
-     int err = 
+void vAdjustMotors(void) { //dado do sensor e target
+     int target = ; //target
+     int out_past1 = 0;//dado do sensor
+     int out_past2 = 0 
+     int err = ; //target-dado do sensor
      int err1 = 0;
      int err2 = 0;
+    
      float ts=0.05;
      float kd=23.43;
      float ki=0.15;
      float kp=1.17;
      
-     float out = err*(2*ts*kp+ki*pow(ts,2)+4*kd)+err1*(2*ki*pow(ts,2)-8*kd)+err2*(ki*pow(ts,2)-2*ts*kd_4*kd)-out_past*2*ts;
-     ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL2, out));
-     ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL2));
-     
-     out_past = out;
-     err2 = err1;
-     err1 = err;
-     err = out - target; 
+     while(err!=0){
+         float out = err*(2*ts*kp+ki*pow(ts,2)+4*kd)+err1*(2*ki*pow(ts,2)-8*kd)+err2*(ki*pow(ts,2)-2*ts*kd_4*kd)-out_past2*2*ts;
+         
+         if(err > 0){
+            LEDC_DUTY2 -= 0.25;
+            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL2, LEDC_DUTY2));
+            ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL2));
+         }else if(err < 0){
+            LEDC_DUTY2 += 0.25;
+            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL2, LEDC_DUTY2));
+            ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL2));
+         }
+         
+         
+         
+         out_past2 = out_past1;
+         out_past = out;
+         err2 = err1;
+         err1 = err;
+         err = out - target;
+     }
 }
