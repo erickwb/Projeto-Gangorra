@@ -72,7 +72,6 @@ static void vTaskBluetooth(void *pvParameters) {
         }
         else {
             vReceiveBluetoothData(&handle);
-            // updateDisplay = true;
         }
         xSemaphoreGive(settingsMutex);
         vTaskDelay(300/portTICK_PERIOD_MS);
@@ -123,8 +122,8 @@ void vTasksInit(void) {
     if (angleMutex && settingsMutex) {
         xTaskCreate(vTaskSensor, "TaskSensor", configMINIMAL_STACK_SIZE*10, NULL, 3, NULL);
         xTaskCreate(vTaskMotors, "TaskMotors", configMINIMAL_STACK_SIZE*10, NULL, 2, NULL);
-        // xTaskCreate(vTaskBluetooth, "TaskBluetooth", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
-        // xTaskCreate(vTaskDisplay, "TaskDisplay", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
+        xTaskCreate(vTaskBluetooth, "TaskBluetooth", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
+        xTaskCreate(vTaskDisplay, "TaskDisplay", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
     }
 }
 

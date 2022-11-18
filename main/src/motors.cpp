@@ -33,7 +33,8 @@ void vInitMotors(void) {
 }
 
 void vAdjustMotors(void) {
-     /* if (i > 100) {
+     /* 
+     if (i > 100) {
           i = 0;
      }
      ESP_LOGI("Duty Cycle Motor_Left", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
@@ -41,5 +42,8 @@ void vAdjustMotors(void) {
      mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, i);
      mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, i);
      i += 10;
-     vTaskDelay(1000 / portTICK_PERIOD_MS); */
+     vTaskDelay(1000 / portTICK_PERIOD_MS); 
+     */
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40);
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
 }
