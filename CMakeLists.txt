@@ -5,4 +5,5 @@
 cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+# include($ENV{IDF_PATH}/components/driver/include/driver/cmake/idf_component.cmake)
 project(balanco_didatico)

@@ -45,9 +45,10 @@ void vInitUltrasonicSensor(void) {
 }
 
 float fReadAccelerometerSensor(void) {
-     float ax = accelerometer.getAccX();
+     // float ax = accelerometer.getAccX();
+     float ay = accelerometer.getAccY();
      float az = accelerometer.getAccZ();
-     return (currentAngle = atan(ax/az)*ACCELEROMETER_RADIAN_TO_DEGREES);
+     return (currentAngle = atan(ay/az)*ACCELEROMETER_RADIAN_TO_DEGREES);
 }
 
 float fReadUltrasonicSensor(void) {

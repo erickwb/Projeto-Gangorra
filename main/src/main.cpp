@@ -7,7 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-
+#include "esp_log.h"
 #include "bluetooth.hpp"
 #include "display.hpp"
 #include "motors.hpp"
@@ -45,6 +45,7 @@ static void vTaskSensor(void *pvParameters) {
         xSemaphoreTake(angleMutex, portMAX_DELAY);
         xSemaphoreTake(settingsMutex, portMAX_DELAY);
         (xGetCurrentSettings()->currentSensor == ULTRASONIC_SENSOR) ? fReadUltrasonicSensor() : fReadAccelerometerSensor();
+        // ESP_LOGI("SENSOR", "Angle: %f", fGetCurrentAngle());
         xSemaphoreGive(settingsMutex);
         xSemaphoreGive(angleMutex);
         vTaskDelay(50/portTICK_PERIOD_MS);
@@ -122,8 +123,8 @@ void vTasksInit(void) {
     if (angleMutex && settingsMutex) {
         xTaskCreate(vTaskSensor, "TaskSensor", configMINIMAL_STACK_SIZE*10, NULL, 3, NULL);
         xTaskCreate(vTaskMotors, "TaskMotors", configMINIMAL_STACK_SIZE*10, NULL, 2, NULL);
-        xTaskCreate(vTaskBluetooth, "TaskBluetooth", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
-        xTaskCreate(vTaskDisplay, "TaskDisplay", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
+        // xTaskCreate(vTaskBluetooth, "TaskBluetooth", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
+        // xTaskCreate(vTaskDisplay, "TaskDisplay", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
     }
 }
 
