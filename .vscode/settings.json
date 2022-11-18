@@ -9,5 +9,9 @@
     "target/esp32.cfg"
   ],
   "idf.pythonBinPath": "python",
-  "idf.toolsPath": "/home/anderson/.espressif"
+  "idf.toolsPath": "/home/anderson/.espressif",
+  "files.associations": {
+    "cmath": "cpp",
+    "complex": "cpp"
+  }
 }
