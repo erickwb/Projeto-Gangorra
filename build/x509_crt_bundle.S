@@ -1,4 +1,4 @@
-/* * Data converted from /home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from /home/samuel/esp/projects/Projeto-Gangorra/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded

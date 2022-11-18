@@ -4,16 +4,16 @@
 cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
-  "/home/pedrobotelho15/esp/esp-idf/components/bootloader/subproject"
-  "/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader"
-  "/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix"
-  "/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/tmp"
-  "/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp"
-  "/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src"
-  "/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/samuel/esp/esp-idf/components/bootloader/subproject"
+  "/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader"
+  "/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix"
+  "/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/tmp"
+  "/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp"
+  "/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src"
+  "/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
+    file(MAKE_DIRECTORY "/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/${subDir}")
 endforeach()

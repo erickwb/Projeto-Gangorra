@@ -1,13 +1,13 @@
 # Target labels
  bootloader
 # Source files and their labels
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/CMakeFiles/bootloader
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/CMakeFiles/bootloader.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/CMakeFiles/bootloader-complete.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
-/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/CMakeFiles/bootloader
+/home/samuel/esp/projects/Projeto-Gangorra/build/CMakeFiles/bootloader.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/CMakeFiles/bootloader-complete.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/samuel/esp/projects/Projeto-Gangorra/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

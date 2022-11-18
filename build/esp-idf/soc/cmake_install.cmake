@@ -1,4 +1,4 @@
-# Install script for directory: /home/pedrobotelho15/esp/esp-idf/components/soc
+# Install script for directory: /home/samuel/esp/esp-idf/components/soc
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,12 +34,12 @@ endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/home/pedrobotelho15/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-objdump")
+  set(CMAKE_OBJDUMP "/home/samuel/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-objdump")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/pedrobotelho15/esp/projects/projeto_gangorra_bluetooth/build/esp-idf/soc/esp32/cmake_install.cmake")
+  include("/home/samuel/esp/projects/Projeto-Gangorra/build/esp-idf/soc/esp32/cmake_install.cmake")
 
 endif()
 
