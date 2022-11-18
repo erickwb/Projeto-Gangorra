@@ -15,7 +15,6 @@
 #define SYSTEM_DEFAULT_ANGLE  0
 #define SYSTEM_DEFAULT_MODE   DISCONNECTED_MODE
 #define SYSTEM_DEFAULT_SENSOR ULTRASONIC_SENSOR
-#define ACCELEROMETER         ACCELEROMETER_SENSOR
 
 static SystemSettings currentSettings;
 
@@ -37,7 +36,7 @@ void vComponentsInit(void) {
           .referenceAngle = SYSTEM_DEFAULT_ANGLE,
           .currentMode = SYSTEM_DEFAULT_MODE,
           // .currentSensor = SYSTEM_DEFAULT_SENSOR
-          .currentSensor = ACCELEROMETER
+          .currentSensor = ACCELEROMETER_SENSOR
      };
      vInitAccelerometerSensor();
      vInitUltrasonicSensor();
