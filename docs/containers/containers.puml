@@ -1,0 +1,15 @@
+@startuml Gangorra
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(agente, "Agente", "Manipula o ambiente de controle.")
+System_Boundary(sistemaControle, "Sistema de controle"){
+    Container(cMobileApp, "Aplicação Mobile", "React Native", "Aplicação Mobile que se comunica com o Firmware e pode enviar novos valores das variáveis de controle, PID, ângulação.")
+    Container(cFirmware, "Firmware", "C++", "Recebe da aplicação mobile qual o modo de operação, valores P,I,D e angulação.")
+    Container(cSensores, "Sensores", "C++", "Realiza a leitura dos sensores ultrassônicos e acelerôemtro/giroscópio.")
+    Container(cControle, "Controle", "PWM", "A partir das informações sintetizadas pelo firmware, faz o controle do sistema.")
+}
+Rel(agente, cMobileApp, "Conexão Bluetooth")
+Rel(cMobileApp, cFirmware, "Conexão Bluetooth Low Energy")
+Rel(cFirmware, cSensores, "Leitura")
+Rel(cFirmware, cControle, "Faz chamada")
+@enduml

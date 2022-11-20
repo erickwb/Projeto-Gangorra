@@ -1,0 +1,14 @@
+@startuml Gangorra
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(agente, "Agente", "Manipula o ambiente de controle.")
+System_Boundary(sistemaControle, "Sistema de controle"){
+    System(mobileApp, "Aplicação Mobile", "Comunicação com o firmware.")
+    System(firmware, "Firmware", "Faz a leitura dos sensores e sintetiza os dados de variáveis de controle.")
+    System(controle, "Controle", "Recebe dados dos sensores e os valores das variáveis de controle e realiza o controle dos atuadores.")
+}
+
+Rel(agente, mobileApp, "Acessa")
+Rel(mobileApp, firmware, "Comunicação")
+Rel(firmware, controle, "Controle")
+@enduml

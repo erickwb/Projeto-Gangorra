@@ -1,0 +1,67 @@
+@startuml Gangorra
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+
+title Diagrama de Componentes - Firmware
+
+
+Container(cFirmware, "Firmware", "C++", "Recebe da aplicação mobile qual o modo de operação, valores P,I,D e angulação.")
+
+Container_Boundary(sensores, "Sensores") {
+    Component(getCurrentAngle, "fGetCurrentAngle", "C++ Método", "Faz a leitura do ângulo atual.")
+    Component(initAccelerometerSensor, "vInitAccelerometerSensor", "C++ Método", "Inicializa o sensor acelerômetro/giroscópio nas portas I2C do ESP 32.")
+    Component(initUltrasonicSensor, "vInitUltrasonicSensor", "C++ Método", "Inicializa os sensores ultrassônicos (left e right).")
+    Component(ReadAccelerometerSensor, "fReadAccelerometerSensor", "C++ Método", "Faz a leitura do sensor acelerômetro. Com base nos eixos ax e az obtidos pelo sensor.")
+    Component(ReadUltrasonicSensor, "fReadUltrasonicSensor", "C++ Método", "Faz a leitura dos sensores ultrassônicos e o cálculo do ângulo dos sensores.")
+
+
+    Rel(ReadAccelerometerSensor, getCurrentAngle, "Utiliza")
+    Rel(ReadUltrasonicSensor, getCurrentAngle, "Utiliza")
+}
+
+Container_Boundary(display, "Display") {
+    Component(InitDisplay, "vInitDisplay", "C++ Método", "Inicializa o display LCD.")
+    Component(ClearDisplay, "vClearDisplay", "C++ Método", "Limpa o display.")
+    Component(SetDisplayCursor, "vSetDisplayCursor", "C++ Método", "Seta o cursor do display.")
+    Component(DisplayWriteChar, "vDisplayWriteChar", "C++ Método", "Escreve um character no display.")
+    Component(DisplayWriteString, "vDisplayWriteString", "C++ Método", "Escreve uma string no display.")
+    Component(EraseDisplayCells, "vEraseDisplayCells", "C++ Método", "Limpa as células do display")
+}
+
+Container_Boundary(sistema, "Sistema") {
+    Component(GetCurrentSettings, "xGetCurrentSettings", "C++ Método", "Ponteiro do SystemSettings tipo para as configurações atuais do sistema.")
+    Component(SetCurrentSettings, "vSetCurrentSettings", "C++ Método", "Seta as configurações atuais do sistema.")
+    Component(ComponentsInit, "vComponentsInit", "C++ Método", "Inicializa os componentes do sistema no modo padrão.")
+    Component(StartupScreen, "vStartupScreen", "C++ Método", "Mostra a tela de inicialização do sistema.")
+}
+
+Container_Boundary(tasks, "Tasks") {
+    Component(TaskSensor, "vTaskSensor", "FreeRTOS Task", "Task utilizada tanto para os sensores ultrassônicos, quanto para o sensor acelerômetro/giroscópio. O sensor atual é definido através da xGetCurrentSettings.")
+    Component(TaskMotors, "vTaskMotors", "FreeRTOS Task", "Task utilizada para os motores.")
+    Component(TaskBluetooth, "vTaskBluetooth", "FreeRTOS Task", "Task utilizada para a conexão bluetooth.")
+    Component(TaskDisplay, "vTaskDisplay", "FreeRTOS Task", "Task utilizada para a atualização do display.")
+    Component(TasksInit, "vTasksInit", "FreeRTOS Task", "Função utilizada para criar as tasks vTaskSensor, vTaskMotors, vTaskBluetooth, vTaskDisplay.")
+    Component(SystemInit, "vSystemInit", "FreeRTOS Task", "Função utilizada para inicializar o sistema e criar as tasks.")
+}
+
+Rel(cFirmware, SystemInit, "Inicializa")
+Rel(SystemInit, TasksInit, "Inicializa")
+Rel(TasksInit, TaskSensor, "Inicializa")
+Rel(TasksInit, TaskBluetooth, "Inicializa")
+Rel(TasksInit, TaskMotors, "Inicializa")
+Rel(TasksInit, TaskDisplay, "Inicializa")
+Rel(SystemInit, GetCurrentSettings, "Acessa")
+Rel(SystemInit, SetCurrentSettings, "Seta")
+Rel(SystemInit, ComponentsInit, "Utiliza")
+Rel(SystemInit, StartupScreen, "Utiliza")
+Rel(TaskSensor, ReadAccelerometerSensor, "Utiliza")
+Rel(TaskSensor, ReadUltrasonicSensor, "Utiliza")
+Rel(ComponentsInit, initAccelerometerSensor, "Inicializa")
+Rel(ComponentsInit, initUltrasonicSensor, "Inicializa")
+Rel(ComponentsInit, InitDisplay, "Inicializa")
+Rel(TaskDisplay, ClearDisplay, "Utiliza")
+Rel(TaskDisplay, SetDisplayCursor, "Utiliza")
+Rel(TaskDisplay, DisplayWriteChar, "Utiliza")
+Rel(TaskDisplay, DisplayWriteString, "Utiliza")
+Rel(TaskDisplay, EraseDisplayCells, "Utiliza")
+@enduml
