@@ -35,8 +35,8 @@ void vComponentsInit(void) {
           },
           .referenceAngle = SYSTEM_DEFAULT_ANGLE,
           .currentMode = SYSTEM_DEFAULT_MODE,
-          // .currentSensor = SYSTEM_DEFAULT_SENSOR
-          .currentSensor = ACCELEROMETER_SENSOR
+          .currentSensor = SYSTEM_DEFAULT_SENSOR
+          //.currentSensor = ACCELEROMETER_SENSOR
      };
      vInitAccelerometerSensor();
      vInitUltrasonicSensor();

@@ -10,15 +10,23 @@
 
 #include <cmath>
 #include "sensors.hpp"
+#include <iostream>
 
 #define REF_ANGLE 0.0
-#define MOTOR_LEFT 18
-#define MOTOR_RIGHT 17
+#define MOTOR_LEFT 12
+#define MOTOR_RIGHT 13
+
+float out_past1 = 0;
+float out_past2 = 0;
+
+float error = 0;
+float error1 = 0;
+float error2 = 0;
+
 
 // float i = 31;
 
-void vInitMotors(void)
-{
+void vInitMotors(void) {
 
      mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, MOTOR_LEFT);
      mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, MOTOR_RIGHT);
@@ -31,9 +39,10 @@ void vInitMotors(void)
      };
 
      mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &motor_pwm_config);
-     vTaskDelay(100 / portTICK_PERIOD_MS);
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40);
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
+     // vTaskDelay(3000/portTICK_PERIOD_MS);
+     usleep(3000000);
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40.0);
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40.0);
      /*
      ESP_LOGI("Frequency Motor_Left", "Using rev \"%u\"Hz", mcpwm_get_frequency(MCPWM_UNIT_0, MCPWM_TIMER_0));
      ESP_LOGI("Duty Cycle Motor_Left", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
@@ -42,44 +51,45 @@ void vInitMotors(void)
 }
 
 void vAdjustMotors(void) {
-     
-     float angle = fGetCurrentAngle(); 
-     ESP_LOGI("Angle", "%.2f", angle);
+
      float target = REF_ANGLE;
-     float out_past1 = 0;
-     float out_past2 = 0;
-     float error = target - angle;
-     float error1 = 0;
-     float error2 = 0;
+     float angle = fGetCurrentAngle();
+     error = target - angle;
 
      float ts = 0.05;
      float Kp = 23.43;
      float Ki = 0.15;
      float Kd = 1.17;
      float dutycycle = 0;
-     while (error != 0){
-          float out = error * (2 * ts * Kp + Ki * pow(ts,2) + 4 * Kd) \
-          + error1 * (2 * Ki * pow(ts,2) - 8 * Kd) \
-          + error2 * (Ki * pow(ts,2) - 2 * ts * Kp + 4 * Kd) \
+     //while (error != 0){
+     float out = error * (2 * ts * Kp + Ki * pow(ts, 2) + 4 * Kd) \
+          + error1 * (2 * Ki * pow(ts, 2) - 8 * Kd) \
+          + error2 * (Ki * pow(ts, 2) - 2 * ts * Kp + 4 * Kd) \
           - out_past2 * 2 * ts;
 
-          if(error > 0){
-               ESP_ERROR_CHECK(dutycycle = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
-               dutycycle -= 0.25;
-               ESP_ERROR_CHECK(mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, dutycycle));
-          }else if(error < 0){
-               ESP_ERROR_CHECK(dutycycle = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
-               dutycycle += 0.25;
+     ESP_LOGI("Angle", "%f", angle);
+     ESP_LOGI("Error", "%f", error);
+     ESP_LOGI("OUT", "%f", out);
+     if ((error > 0) && (mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B) > 32)) {
+          dutycycle = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
+          if(dutycycle >= 32.0) {
+               dutycycle -= 0.5;
                ESP_ERROR_CHECK(mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, dutycycle));
           }
-
-
-          out_past2 = out_past1;
-          out_past1 = out;
-          error2 = error1;
-          error1 = error;
-          error = out - target;
      }
+     else if (error < 0) {
+          dutycycle = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
+          dutycycle += 0.5;
+          ESP_ERROR_CHECK(mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, dutycycle));
+     }
+
+
+     out_past2 = out_past1;
+     out_past1 = out;
+     error2 = error1;
+     error1 = error;
+     error = out - target;
+     //}
 
 
      /*
@@ -94,9 +104,9 @@ void vAdjustMotors(void) {
      vTaskDelay(1000 / portTICK_PERIOD_MS);
      */
 
-     /* 
+     /*
      mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40);
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40); 
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
      */
 
 }

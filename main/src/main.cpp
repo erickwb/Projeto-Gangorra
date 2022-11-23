@@ -33,7 +33,9 @@ void vSystemInit(void);
 
 extern "C" void app_main(void) {
     vSystemInit();
-    while (true);
+    while (true) {
+        //vTaskDelay(1000/portTICK_PERIOD_MS);
+    }
 }
 
 // =============================================================================
@@ -120,10 +122,10 @@ void vTasksInit(void) {
     angleMutex = xSemaphoreCreateMutex();
     settingsMutex = xSemaphoreCreateMutex();
     if (angleMutex && settingsMutex) {
-        xTaskCreate(vTaskSensor, "TaskSensor", configMINIMAL_STACK_SIZE*10, NULL, 3, NULL);
-        xTaskCreate(vTaskMotors, "TaskMotors", configMINIMAL_STACK_SIZE*10, NULL, 2, NULL);
-        xTaskCreate(vTaskBluetooth, "TaskBluetooth", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
-        xTaskCreate(vTaskDisplay, "TaskDisplay", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL);
+        xTaskCreatePinnedToCore(vTaskSensor, "TaskSensor", configMINIMAL_STACK_SIZE*10, NULL, 3, NULL, PRO_CPU_NUM);
+        xTaskCreatePinnedToCore(vTaskMotors, "TaskMotors", configMINIMAL_STACK_SIZE*50, NULL, 2, NULL, APP_CPU_NUM);
+        xTaskCreatePinnedToCore(vTaskBluetooth, "TaskBluetooth", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL, PRO_CPU_NUM);
+        xTaskCreatePinnedToCore(vTaskDisplay, "TaskDisplay", configMINIMAL_STACK_SIZE*10, NULL, 1, NULL, PRO_CPU_NUM);
     }
 }
 
