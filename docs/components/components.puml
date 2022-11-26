@@ -44,6 +44,16 @@ Container_Boundary(tasks, "Tasks") {
     Component(SystemInit, "vSystemInit", "FreeRTOS Task", "Função utilizada para inicializar o sistema e criar as tasks.")
 }
 
+Container_Boundary(motores, "Motores") {
+    Component(InitMotors, "vInitMotors", "C++ Método", "Inicializa os motores.")
+    Component(AdjustMotors, "vAdjustMotors", "C++ Método", "Faz o controle dos motores.")
+}
+
+Container_Boundary(bluetooth, "Bluetooth") {
+    Component(InitBluetooth, "vInitBluetooth", "C++ Método", "Inicializa os serviços bluetooth.")
+    Component(ReceiveBluetoothData, "vReceiveBluetoothData", "C++ Método", "Pode ser utilizada para receber dados via bluetooth.")
+}
+
 Rel(cFirmware, SystemInit, "Inicializa")
 Rel(SystemInit, TasksInit, "Inicializa")
 Rel(TasksInit, TaskSensor, "Inicializa")
@@ -59,9 +69,13 @@ Rel(TaskSensor, ReadUltrasonicSensor, "Utiliza")
 Rel(ComponentsInit, initAccelerometerSensor, "Inicializa")
 Rel(ComponentsInit, initUltrasonicSensor, "Inicializa")
 Rel(ComponentsInit, InitDisplay, "Inicializa")
+Rel(ComponentsInit, InitMotors, "Inicializa")
+Rel(ComponentsInit, Bluetooth, "Inicializa")
 Rel(TaskDisplay, ClearDisplay, "Utiliza")
 Rel(TaskDisplay, SetDisplayCursor, "Utiliza")
 Rel(TaskDisplay, DisplayWriteChar, "Utiliza")
 Rel(TaskDisplay, DisplayWriteString, "Utiliza")
 Rel(TaskDisplay, EraseDisplayCells, "Utiliza")
+Rel(TaskMotors, AdjustMotors, "Utiliza")
+Rel(TaskBluetooth, ReceiveBluetoothData, "Utiliza")
 @enduml
