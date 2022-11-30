@@ -12,16 +12,26 @@
 #include "sensors.hpp"
 #include <iostream>
 
-#define REF_ANGLE 0.0
-#define MOTOR_LEFT 12
-#define MOTOR_RIGHT 13
 
-float out_past1 = 0;
-float out_past2 = 0;
+#define ACCELEROMETER_DEGREES_TO_RADIAN M_PI/180
 
-float error = 0;
-float error1 = 0;
-float error2 = 0;
+#define Kd                              23.43
+#define Ki                              0.15
+#define Kp                              1.17
+#define X                               0.0425
+#define Ts                              0.05
+
+#define REF_ANGLE                       0.0
+#define MOTOR_LEFT                      12
+#define MOTOR_RIGHT                     13
+
+float OUT_CONTROL_PAST1 = 0;
+float OUT_CONTROL_PAST2 = 0;
+float OUT_PWM_PAST = 0;
+
+float ERROR_CONTROL = 0;
+float ERROR_CONTROL_PAST1 = 0;
+float ERROR_CONTROL_PAST2 = 0;
 
 
 // float i = 31;
@@ -52,61 +62,58 @@ void vInitMotors(void) {
 
 void vAdjustMotors(void) {
 
-     float target = REF_ANGLE;
      float angle = fGetCurrentAngle();
-     error = target - angle;
+     ESP_LOGI("Angle", "%.2f", angle);
 
-     float ts = 0.05;
-     float Kp = 23.43;
-     float Ki = 0.15;
-     float Kd = 1.17;
-     float dutycycle = 0;
+     //if (angle >= -14 && angle <= 14) {
+     ERROR_CONTROL = REF_ANGLE - angle;
+     ERROR_CONTROL = ERROR_CONTROL * ACCELEROMETER_DEGREES_TO_RADIAN;
+
      //while (error != 0){
-     float out = error * (2 * ts * Kp + Ki * pow(ts, 2) + 4 * Kd) \
-          + error1 * (2 * Ki * pow(ts, 2) - 8 * Kd) \
-          + error2 * (Ki * pow(ts, 2) - 2 * ts * Kp + 4 * Kd) \
-          - out_past2 * 2 * ts;
+     float out_control = ERROR_CONTROL * (2 * Ts * Kp + Ki * pow(Ts, 2) + 4 * Kd) \
+          + ERROR_CONTROL_PAST1 * (2 * Ki * pow(Ts, 2) - 8 * Kd) \
+          + ERROR_CONTROL_PAST2 * (Ki * pow(Ts, 2) - 2 * Ts * Kp + 4 * Kd) \
+          - OUT_CONTROL_PAST2 * 2 * Ts;
 
-     ESP_LOGI("Angle", "%f", angle);
-     ESP_LOGI("Error", "%f", error);
-     ESP_LOGI("OUT", "%f", out);
-     if ((error > 0) && (mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B) > 32)) {
-          dutycycle = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
-          if(dutycycle >= 32.0) {
-               dutycycle -= 0.5;
-               ESP_ERROR_CHECK(mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, dutycycle));
+
+     float out_pwm = 2 * X * out_control - 2 * X * OUT_CONTROL_PAST1 - Ts * OUT_PWM_PAST;
+     ESP_LOGI("DUTY_LEFT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
+     ESP_LOGI("DUTY_RIGHT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
+     out_pwm = abs(out_pwm);
+     ESP_LOGI("OUT_PWM:", "%.2f", out_pwm);
+     if (out_pwm >= 0) {
+          float signal_pwm = 30 + (out_pwm / 5);
+          ESP_LOGI("Signal PWM:", "%.2f", signal_pwm);
+          if (signal_pwm >= 32) {
+               mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, signal_pwm);
           }
-     }
-     else if (error < 0) {
-          dutycycle = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
-          dutycycle += 0.5;
-          ESP_ERROR_CHECK(mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, dutycycle));
-     }
 
+          ERROR_CONTROL_PAST2 = ERROR_CONTROL_PAST1;
+          ERROR_CONTROL_PAST1 = ERROR_CONTROL;
+          OUT_CONTROL_PAST2 = OUT_CONTROL_PAST1;
+          OUT_CONTROL_PAST1 = out_control;
 
-     out_past2 = out_past1;
-     out_past1 = out;
-     error2 = error1;
-     error1 = error;
-     error = out - target;
+          OUT_PWM_PAST = out_pwm;
+
+     }
      //}
+//}
 
+/*
+if (i > 100) {
+     i = 0;
+}
+ESP_LOGI("Duty Cycle Motor_Left", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
+ESP_LOGI("Duty Cycle Motor_Right","%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, i);
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, i);
+i += 10;
+vTaskDelay(1000 / portTICK_PERIOD_MS);
+*/
 
-     /*
-     if (i > 100) {
-          i = 0;
-     }
-     ESP_LOGI("Duty Cycle Motor_Left", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
-     ESP_LOGI("Duty Cycle Motor_Right","%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, i);
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, i);
-     i += 10;
-     vTaskDelay(1000 / portTICK_PERIOD_MS);
-     */
-
-     /*
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40);
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
-     */
+/*
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40);
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
+*/
 
 }
