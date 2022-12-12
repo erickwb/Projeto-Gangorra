@@ -25,13 +25,12 @@
 #define MOTOR_LEFT                      12
 #define MOTOR_RIGHT                     13
 
-float OUT_CONTROL_PAST1 = 0;
-float OUT_CONTROL_PAST2 = 0;
-float OUT_PWM_PAST = 0;
+static float OUT_CONTROL_PAST1 = 0;
+static float OUT_CONTROL_PAST2 = 0;
 
-float ERROR_CONTROL = 0;
-float ERROR_CONTROL_PAST1 = 0;
-float ERROR_CONTROL_PAST2 = 0;
+static float ERROR_CONTROL = 0;
+static float ERROR_CONTROL_PAST1 = 0;
+static float ERROR_CONTROL_PAST2 = 0;
 
 
 // float i = 31;
@@ -52,7 +51,7 @@ void vInitMotors(void) {
      // vTaskDelay(3000/portTICK_PERIOD_MS);
      usleep(3000000);
      mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40.0);
-     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40.0);
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 33.0);
      /*
      ESP_LOGI("Frequency Motor_Left", "Using rev \"%u\"Hz", mcpwm_get_frequency(MCPWM_UNIT_0, MCPWM_TIMER_0));
      ESP_LOGI("Duty Cycle Motor_Left", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
@@ -64,38 +63,48 @@ void vAdjustMotors(void) {
 
      float angle = fGetCurrentAngle();
      ESP_LOGI("Angle", "%.2f", angle);
+    // ESP_LOGI("DUTY_LEFT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
+     //ESP_LOGI("DUTY_RIGHT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
 
-     //if (angle >= -14 && angle <= 14) {
-     ERROR_CONTROL = REF_ANGLE - angle;
-     ERROR_CONTROL = ERROR_CONTROL * ACCELEROMETER_DEGREES_TO_RADIAN;
+     if (angle >= -14 || angle <= 14) {
+          ERROR_CONTROL = REF_ANGLE - angle;
+          ERROR_CONTROL = ERROR_CONTROL * ACCELEROMETER_DEGREES_TO_RADIAN;
 
-     //while (error != 0){
-     float out_control = ERROR_CONTROL * (2 * Ts * Kp + Ki * pow(Ts, 2) + 4 * Kd) \
+     // //while (error != 0){
+          float out_control = ERROR_CONTROL * (2 * Ts * Kp + Ki * pow(Ts, 2) + 4 * Kd) \
           + ERROR_CONTROL_PAST1 * (2 * Ki * pow(Ts, 2) - 8 * Kd) \
           + ERROR_CONTROL_PAST2 * (Ki * pow(Ts, 2) - 2 * Ts * Kp + 4 * Kd) \
           - OUT_CONTROL_PAST2 * 2 * Ts;
-
-
-     float out_pwm = 2 * X * out_control - 2 * X * OUT_CONTROL_PAST1 - Ts * OUT_PWM_PAST;
-     ESP_LOGI("DUTY_LEFT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
-     ESP_LOGI("DUTY_RIGHT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
-     out_pwm = abs(out_pwm);
-     ESP_LOGI("OUT_PWM:", "%.2f", out_pwm);
-     if (out_pwm >= 0) {
-          float signal_pwm = 30 + (out_pwm / 5);
+          
+          float out_pwm = out_control*2.3134*2;
+          ESP_LOGI("OUT_PWM:", "%.2f", out_pwm);
+     // float out_pwm = 2 * X * out_control - 2 * X * OUT_CONTROL_PAST1 - Ts * OUT_PWM_PAST;
+     
+          // out_pwm = abs(out_pwm);
+     // ESP_LOGI("OUT_PWM:", "%.2f", out_pwm);
+     // if (out_pwm >= 0) {
+          float atualDuty = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
+          float signal_pwm = atualDuty + ((out_pwm*30) / 100);
           ESP_LOGI("Signal PWM:", "%.2f", signal_pwm);
-          if (signal_pwm >= 32) {
+          if(signal_pwm >= 31 && signal_pwm <= 50){
                mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, signal_pwm);
           }
+     //      ESP_LOGI("Signal PWM:", "%.2f", signal_pwm);
+     //      if (signal_pwm >= 32) {
+          // mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, signal_pwm);
 
           ERROR_CONTROL_PAST2 = ERROR_CONTROL_PAST1;
           ERROR_CONTROL_PAST1 = ERROR_CONTROL;
           OUT_CONTROL_PAST2 = OUT_CONTROL_PAST1;
           OUT_CONTROL_PAST1 = out_control;
-
-          OUT_PWM_PAST = out_pwm;
-
+     } else {
+          mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 33.0);
      }
+
+
+     //      OUT_PWM_PAST = out_pwm;
+
+     // }
      //}
 //}
 
