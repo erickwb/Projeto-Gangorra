@@ -2,13 +2,14 @@
 
 #include <cmath>
 
+#include "esp_log.h"
 #include "mpu6050.hpp"
-#include "ultrasonic.hpp"
+#include "ultrasonic.h"
 
 #define CM_TO_M                         100
-#define ACCELEROMETER_RADIAN_TO_DEGREES 57.2958
-#define ULTRASONIC_BAR_LENGTH           0.25
-#define ULTRASONIC_MAX_DISTANCE_CM      400
+#define ACCELEROMETER_RADIAN_TO_DEGREES 180/M_PI
+#define ULTRASONIC_BAR_LENGTH           0.5
+#define ULTRASONIC_MAX_DISTANCE_CM      50
 #define ULTRASONIC_GPIO_TRIGGER_R       GPIO_NUM_32
 #define ULTRASONIC_GPIO_ECHO_R          GPIO_NUM_34
 #define ULTRASONIC_GPIO_TRIGGER_L       GPIO_NUM_16
@@ -45,9 +46,10 @@ void vInitUltrasonicSensor(void) {
 }
 
 float fReadAccelerometerSensor(void) {
-     float ax = accelerometer.getAccX();
+     // float ax = accelerometer.getAccX();
+     float ay = accelerometer.getAccY();
      float az = accelerometer.getAccZ();
-     return (currentAngle = atan(ax/az)*ACCELEROMETER_RADIAN_TO_DEGREES);
+     return (currentAngle = atan(ay/az)*ACCELEROMETER_RADIAN_TO_DEGREES);
 }
 
 float fReadUltrasonicSensor(void) {
@@ -55,5 +57,6 @@ float fReadUltrasonicSensor(void) {
      float distance_sensor_left = 0;
      ultrasonic_measure(&sensor_right, ULTRASONIC_MAX_DISTANCE_CM, &distance_sensor_right);
      ultrasonic_measure(&sensor_left, ULTRASONIC_MAX_DISTANCE_CM, &distance_sensor_left);
-     return (currentAngle = asin((distance_sensor_left - distance_sensor_right)/ULTRASONIC_BAR_LENGTH)*CM_TO_M);
+     // ESP_LOGI("SENSOR", "Distance left: %f", distance_sensor_left);
+     return (currentAngle = asin((distance_sensor_left - distance_sensor_right)/ULTRASONIC_BAR_LENGTH)*ACCELEROMETER_RADIAN_TO_DEGREES);
 }

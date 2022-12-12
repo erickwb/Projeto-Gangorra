@@ -1,121 +1,128 @@
 #include "motors.hpp"
-#include <stdio.h>
-#include "driver/ledc.h"
+#include "driver/mcpwm.h"
+
+#include "esp_log.h"
 #include "esp_err.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+
 #include <cmath>
+#include "sensors.hpp"
+#include <iostream>
 
-#define LEDC_TIMER1              LEDC_TIMER_1
-#define LEDC_TIMER2              LEDC_TIMER_2
-#define LEDC_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_OUTPUT_IO1          (18) // Define the output GPIO
-#define LEDC_OUTPUT_IO2          (17) // Define the output GPIO
-#define LEDC_CHANNEL1            LEDC_CHANNEL_0
-#define LEDC_CHANNEL2            LEDC_CHANNEL_1
-#define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
-#define LEDC_DUTY1               (3194) // Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
-#define LEDC_DUTY2               (3194) // Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
-#define LEDC_FREQUENCY          (300) // Frequency in Hertz. Set frequency at 5 kHz
 
-static void example_ledc_init1(void) {
-     // Prepare and then apply the LEDC PWM timer configuration
-     ledc_timer_config_t ledc_timer = {
-         .speed_mode = LEDC_MODE,
-         .duty_resolution = LEDC_DUTY_RES,
-         .timer_num = LEDC_TIMER1,
-         .freq_hz = LEDC_FREQUENCY,  // Set output frequency at 5 kHz
-         .clk_cfg = LEDC_AUTO_CLK
-     };
-     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+#define ACCELEROMETER_DEGREES_TO_RADIAN M_PI/180
 
-     // Prepare and then apply the LEDC PWM channel configuration
-     ledc_channel_config_t ledc_channel = {
-         .gpio_num = LEDC_OUTPUT_IO1,
-         .speed_mode = LEDC_MODE,
-         .channel = LEDC_CHANNEL1,
-         .intr_type = LEDC_INTR_DISABLE,
-         .timer_sel = LEDC_TIMER1,
-         .duty = 0, // Set duty to 0%
-         .hpoint = 0,
-         .flags = {
-           .output_invert = 0
-         }
-     };
-     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
-}
+#define Kd                              23.43
+#define Ki                              0.15
+#define Kp                              1.17
+#define X                               0.0425
+#define Ts                              0.05
 
-static void example_ledc_init2(void) {
-     // Prepare and then apply the LEDC PWM timer configuration
-     ledc_timer_config_t ledc_timer = {
-         .speed_mode = LEDC_MODE,
-         .duty_resolution = LEDC_DUTY_RES,
-         .timer_num = LEDC_TIMER2,
-         .freq_hz = LEDC_FREQUENCY,  // Set output frequency at 5 kHz
-         .clk_cfg = LEDC_AUTO_CLK
-     };
-     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+#define REF_ANGLE                       0.0
+#define MOTOR_LEFT                      12
+#define MOTOR_RIGHT                     13
 
-     // Prepare and then apply the LEDC PWM channel configuration
-     ledc_channel_config_t ledc_channel = {
-         .gpio_num = LEDC_OUTPUT_IO2,
-         .speed_mode = LEDC_MODE,
-         .channel = LEDC_CHANNEL2,
-         .intr_type = LEDC_INTR_DISABLE,
-         .timer_sel = LEDC_TIMER2,
-         .duty = 0, // Set duty to 0%
-         .hpoint = 0,
-         .flags = {
-           .output_invert = 0
-         }
-     };
-     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
-}
+static float OUT_CONTROL_PAST1 = 0;
+static float OUT_CONTROL_PAST2 = 0;
+
+static float ERROR_CONTROL = 0;
+static float ERROR_CONTROL_PAST1 = 0;
+static float ERROR_CONTROL_PAST2 = 0;
+
+
+// float i = 31;
 
 void vInitMotors(void) {
-     example_ledc_init1();
-     // Set duty to 50%
-     ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL1, LEDC_DUTY1));
-     // Update duty to apply the new value
-     ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL1));
 
-     example_ledc_init2();
-     // Set duty to 50%
-     ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL2, LEDC_DUTY2));
-     // Update duty to apply the new value
-     ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL2));
+     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, MOTOR_LEFT);
+     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, MOTOR_RIGHT);
+     mcpwm_config_t motor_pwm_config = {
+         .frequency = 300, // frequency = 300Hz,
+         .cmpr_a = 30,     // duty cycle of PWMxA
+         .cmpr_b = 30,     // duty cycle of PWMxb
+         .duty_mode = MCPWM_DUTY_MODE_0,
+         .counter_mode = MCPWM_UP_COUNTER,
+     };
+
+     mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &motor_pwm_config);
+     // vTaskDelay(3000/portTICK_PERIOD_MS);
+     usleep(3000000);
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40.0);
+     mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 33.0);
+     /*
+     ESP_LOGI("Frequency Motor_Left", "Using rev \"%u\"Hz", mcpwm_get_frequency(MCPWM_UNIT_0, MCPWM_TIMER_0));
+     ESP_LOGI("Duty Cycle Motor_Left", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
+     ESP_LOGI("Duty Cycle Motor_Right", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
+     */
 }
 
-void vAdjustMotors(void) { //dado do sensor e target
-     // int target = ; //target
-     // int out_past1 = 0;//dado do sensor
-     // int out_past2 = 0 
-     // int err = ; //target-dado do sensor
-     // int err1 = 0;
-     // int err2 = 0;
+void vAdjustMotors(void) {
 
-     // float ts=0.05;
-     // float kd=23.43;
-     // float ki=0.15;
-     // float kp=1.17;
+     float angle = fGetCurrentAngle();
+     ESP_LOGI("Angle", "%.2f", angle);
+    // ESP_LOGI("DUTY_LEFT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
+     //ESP_LOGI("DUTY_RIGHT:", "%.2f", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
 
-     // while(err!=0){
-     //     float out = err*(2*ts*kp+ki*pow(ts,2)+4*kd)+err1*(2*ki*pow(ts,2)-8*kd)+err2*(ki*pow(ts,2)-2*ts*kd_4*kd)-out_past2*2*ts;
+     if (angle >= -14 || angle <= 14) {
+          ERROR_CONTROL = REF_ANGLE - angle;
+          ERROR_CONTROL = ERROR_CONTROL * ACCELEROMETER_DEGREES_TO_RADIAN;
 
-     //     if(err > 0){
-     //        LEDC_DUTY2 -= 0.25;
-     //        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL2, LEDC_DUTY2));
-     //        ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL2));
-     //     }else if(err < 0){
-     //        LEDC_DUTY2 += 0.25;
-     //        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL2, LEDC_DUTY2));
-     //        ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL2));
-     //     }
+     // //while (error != 0){
+          float out_control = ERROR_CONTROL * (2 * Ts * Kp + Ki * pow(Ts, 2) + 4 * Kd) \
+          + ERROR_CONTROL_PAST1 * (2 * Ki * pow(Ts, 2) - 8 * Kd) \
+          + ERROR_CONTROL_PAST2 * (Ki * pow(Ts, 2) - 2 * Ts * Kp + 4 * Kd) \
+          - OUT_CONTROL_PAST2 * 2 * Ts;
+          
+          float out_pwm = out_control*2.3134*2;
+          ESP_LOGI("OUT_PWM:", "%.2f", out_pwm);
+     // float out_pwm = 2 * X * out_control - 2 * X * OUT_CONTROL_PAST1 - Ts * OUT_PWM_PAST;
+     
+          // out_pwm = abs(out_pwm);
+     // ESP_LOGI("OUT_PWM:", "%.2f", out_pwm);
+     // if (out_pwm >= 0) {
+          float atualDuty = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
+          float signal_pwm = atualDuty + ((out_pwm*30) / 100);
+          ESP_LOGI("Signal PWM:", "%.2f", signal_pwm);
+          if(signal_pwm >= 31 && signal_pwm <= 50){
+               mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, signal_pwm);
+          }
+     //      ESP_LOGI("Signal PWM:", "%.2f", signal_pwm);
+     //      if (signal_pwm >= 32) {
+          // mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, signal_pwm);
+
+          ERROR_CONTROL_PAST2 = ERROR_CONTROL_PAST1;
+          ERROR_CONTROL_PAST1 = ERROR_CONTROL;
+          OUT_CONTROL_PAST2 = OUT_CONTROL_PAST1;
+          OUT_CONTROL_PAST1 = out_control;
+     } else {
+          mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 33.0);
+     }
 
 
+     //      OUT_PWM_PAST = out_pwm;
 
-     //     out_past2 = out_past1;
-     //     out_past = out;
-     //     err2 = err1;
-     //     err1 = err;
-     //     err = out - target;
      // }
+     //}
+//}
+
+/*
+if (i > 100) {
+     i = 0;
+}
+ESP_LOGI("Duty Cycle Motor_Left", "%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A));
+ESP_LOGI("Duty Cycle Motor_Right","%f %%", mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B));
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, i);
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, i);
+i += 10;
+vTaskDelay(1000 / portTICK_PERIOD_MS);
+*/
+
+/*
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_A, 40);
+mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
+*/
+
 }
