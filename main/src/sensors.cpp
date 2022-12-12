@@ -4,7 +4,7 @@
 
 #include "esp_log.h"
 #include "mpu6050.hpp"
-#include "ultrasonic.h"
+#include "ultrasonic.hpp"
 
 #define CM_TO_M                         100
 #define ACCELEROMETER_RADIAN_TO_DEGREES 180/M_PI
