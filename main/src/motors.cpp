@@ -15,8 +15,9 @@
 
 #define ACCELEROMETER_DEGREES_TO_RADIAN M_PI/180
 
-#define Kd                              79.52
-#define Ki                              0.1
+#define Kd                              100
+// #define Kd                              79.52
+#define Ki                              0.01
 #define Kp                              126
 #define X                               0.0425
 #define Ts                              0.05
@@ -70,36 +71,37 @@ void vAdjustMotors(void) {
 
 
           ERROR_CONTROL = REF_ANGLE - angle;
-          ERROR_CONTROL = ERROR_CONTROL * ACCELEROMETER_DEGREES_TO_RADIAN;
+          if(abs(ERROR_CONTROL) > 2) {
+               ERROR_CONTROL = ERROR_CONTROL * ACCELEROMETER_DEGREES_TO_RADIAN;
 
-          float OUT_CONTROL = ERROR_CONTROL * (2 * Ts * Kp + Ki * pow(Ts, 2) + 4 * Kd) + ERROR_CONTROL_PAST1 * (2 * Ki * pow(Ts, 2) - 8 * Kd) + ERROR_CONTROL_PAST2 * (Ki * pow(Ts, 2) - 2 * Ts * Kp + 4 * Kd) - OUT_CONTROL_PAST2 * (2 * Ts);
-          float pwm = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
-          float out_control_ct = OUT_CONTROL * Ct * 1.25;
-          ESP_LOGI("OUT_PWM1", "%.2f", out_control_ct);
-          // if((REF_ANGLE - angle) < 0) {
-          //      out_control_ct *= -1;
-          // } else {
-          //      out_control_ct *= 1;
-          // }
-          float out = out_control_ct * 0.3 + pwm;
-          ESP_LOGI("OUT_PWM2", "%.2f", out);
+               float OUT_CONTROL = ERROR_CONTROL * (Kp +Ki*(Ts/2)) + ERROR_CONTROL_PAST1 * (-Kp+Ki*(Ts/2)-2*Kd*(1/Ts)) + ERROR_CONTROL_PAST2 * (Kd*(1/Ts)) - OUT_CONTROL_PAST1 * (-1);
+               float pwm = mcpwm_get_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B);
+               float out_control_ct = (OUT_CONTROL * Ct * 3.6)/10000;
+               ESP_LOGI("OUT_PWM1", "%.2f", out_control_ct);
+               // if((REF_ANGLE - angle) < 0) {
+               //      out_control_ct *= -1;
+               // } else {
+               //      out_control_ct *= 1;
+               // }
+               float out = out_control_ct * 0.3 + pwm;
+               ESP_LOGI("OUT_PWM2", "%.2f", out);
 
-          //out_pwm = out_pwm * 0.3 + pwm;
-          usleep(5000);
-          if((out > 31) && (out < 55)) {
-               mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, out);
-          } else if(out < 31) {
-               mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 31);
-          } else if(out > 55) {
-               mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 55);
-          } else {
-               mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
+               //out_pwm = out_pwm * 0.3 + pwm;
+               usleep(5000);
+               if((out > 32) && (out < 45)) {
+                    mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, out);
+               } else if(out < 32) {
+                    mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 32);
+               } else if(out > 45) {
+                    mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 44);
+               } else {
+                    mcpwm_set_duty(MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM_OPR_B, 40);
+               }
+
+               ERROR_CONTROL_PAST1 = ERROR_CONTROL;
+               OUT_CONTROL_PAST2 = OUT_CONTROL_PAST1;
+               OUT_CONTROL_PAST1 = OUT_CONTROL;
           }
-
-          ERROR_CONTROL_PAST2 = ERROR_CONTROL_PAST1;
-          ERROR_CONTROL_PAST1 = ERROR_CONTROL;
-          OUT_CONTROL_PAST2 = OUT_CONTROL_PAST1;
-          OUT_CONTROL_PAST1 = OUT_CONTROL;
 
      }
 
